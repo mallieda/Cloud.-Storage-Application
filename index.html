@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Login & Sign Up</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      display: flex;
+      justify-content: center;
+      padding-top: 50px;
+    }
+    .form-container {
+      width: 300px;
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    input[type=text], input[type=password] {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      background-color: #04AA6D;
+      color: white;
+      padding: 12px;
+      border: none;
+      cursor: pointer;
+    }
+    .toggle-link {
+      text-align: center;
+      margin-top: 12px;
+      color: #04AA6D;
+      cursor: pointer;
+    }
+    h2 {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="form-container">
+  <div id="loginForm">
+    <h2>Login</h2>
+    <input type="text" id="loginUsername" placeholder="Username" required>
+    <input type="password" id="loginPassword" placeholder="Password" required>
+    <button onclick="loginUser()">Login</button>
+    <div class="toggle-link" onclick="toggleForm()">Don't have an account? Sign Up</div>
+  </div>
+
+  <div id="signupForm" style="display: none;">
+    <h2>Sign Up</h2>
+    <input type="text" id="signupUsername" placeholder="Username" required>
+    <input type="password" id="signupPassword" placeholder="Password" required>
+    <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+    <button onclick="signUpUser()">Sign Up</button>
+    <div class="toggle-link" onclick="toggleForm()">Already have an account? Login</div>
+  </div>
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  function toggleForm() {
+    const login = document.getElementById("loginForm");
+    const signup = document.getElementById("signupForm");
+    if (login.style.display === "none") {
+      login.style.display = "block";
+      signup.style.display = "none";
+    } else {
+      login.style.display = "none";
+      signup.style.display = "block";
+    }
+  }
+
+  function signUpUser() {
+    const username = document.getElementById("signupUsername").value.trim();
+    const password = document.getElementById("signupPassword").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+
+    if (!username || !password || !confirmPassword) {
+      alert("Please fill all fields.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match.");
+      return;
+    }
+
+    // Check if user exists before adding
+    db.collection("users").where("username", "==", username).get()
+      .then((querySnapshot) => {
+        if (!querySnapshot.empty) {
+          alert("Username already exists.");
+        } else {
+          db.collection("users").add({
+            username: username,
+            password: password,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          })
+          .then(() => {
+            alert("Sign up successful!");
+            window.location.href = "https://mallieda.github.io/Cloud-Storage.-Application/";
+          });
+        }
+      })
+      .catch((error) => {
+        console.error("Error during sign up: ", error);
+        alert("Sign up failed.");
+      });
+  }
+
+  function loginUser() {
+    const username = document.getElementById("loginUsername").value.trim();
+    const password = document.getElementById("loginPassword").value;
+
+    if (!username || !password) {
+      alert("Please enter username and password.");
+      return;
+    }
+
+    db.collection("users")
+      .where("username", "==", username)
+      .where("password", "==", password)
+      .get()
+      .then((querySnapshot) => {
+        if (!querySnapshot.empty) {
+          alert("Login successful!");
+          window.location.href = "https://mallieda.github.io/Cloud-Storage.-Application/";
+        } else {
+          alert("Invalid username or password.");
+        }
+      })
+      .catch((error) => {
+        console.error("Login error: ", error);
+        alert("Login failed.");
+      });
+  }
+</script>
+
+</body>
+</html>
